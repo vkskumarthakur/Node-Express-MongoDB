@@ -37,18 +37,20 @@ const register = async (req, res) => {
       userId: userCreated._id.toString(),
     });
   } catch (error) {
-    res.status(500).json("internal server error");
+    res.status(500).json({status:"error", message: error?.message});
   }
 };
 
 // controller for login page
 const login = async (req, res) => {
   try {
-    const { email, password } = req.body;
-    const userExist = await User.findOne({ email });
+    const { phone, password } = req.body;
+    const userExist = await User.findOne({ phone });
     if (!userExist) {
       return res.status(400).json({ message: "Invalid credentails" });
     }
+
+
     const user = await bcrypt.compare(password, userExist.password);
     if (user) {
       res.status(200).json({
@@ -57,11 +59,25 @@ const login = async (req, res) => {
         userId: userExist._id.toString(),
       });
     } else {
-      res.status(401).json({ message: "Invalid email or password" });
+      res.status(401).json({ message: "Invalid phone or password" });
     }
   } catch (error) {
-    res.status(500).json("internal server error");
+    res.status(500).json( error.message || "internal server error");
   }
 };
 
-module.exports = { home, register, login };
+// controller for profile page
+const profile = async (req, res) => {
+  try {
+    const user = req.user;
+    res.status(200).json({
+      username: user.username,
+      email: user.email,
+      phone: user.phone,
+    });
+  } catch (error) {
+    res.status(500).json({ message: error.message || 'Internal server error' });
+  }
+};
+
+module.exports = { home, register, login, profile };
